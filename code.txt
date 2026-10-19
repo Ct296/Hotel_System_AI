@@ -1,0 +1,23 @@
+# 1. Khởi tạo cấu trúc thư mục (Chỉ chạy lần đầu)
+python src/config.py
+
+# 2. Xử lý dữ liệu thô từ file txt sang csv và tự động lấy danh sách nhãn
+python src/read_data.py
+
+# 3. Làm sạch dữ liệu văn bản (clean_text)
+python src/clean_data.py
+
+# 4. Tokenize dữ liệu và đóng gói thành Tensor cho PyTorch
+python src/prepare_data.py
+
+# 5. Huấn luyện mô hình (Quá trình này tốn nhiều thời gian nhất)
+python src/train_evaluate.py
+
+# 6. Chạy giao diện Console (Terminal) để test mô hình tương tác liên tục
+python src/predict_cli.py
+
+# 7. Chạy test mô hình bằng lệnh trực tiếp (Ví dụ test 1 câu)
+python src/predict_cli.py --text "Khách sạn rộng rãi, sạch nhưng nhân viên phục vụ kém và đồ ăn dở"
+
+# 8. Khởi chạy API Server cục bộ cho Spring Boot / Vue kết nối
+python src/api_service.py
