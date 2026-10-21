@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from transformers import AutoModel, AdamW
+from transformers import AutoModel
+from torch.optim import AdamW
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -87,7 +88,7 @@ def train():
     print(f"🚀 Đang sử dụng thiết bị: {device}")
 
     # Load dữ liệu đã Tokenize
-    data = torch.load(TOKENIZED_DATA_FILE)
+    data = torch.load(TOKENIZED_DATA_FILE, weights_only=False)
     train_loader = DataLoader(data['train'], batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(data['val'], batch_size=BATCH_SIZE)
     

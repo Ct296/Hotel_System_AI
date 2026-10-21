@@ -1,3 +1,6 @@
+# 0. Cài đặt toàn bộ thư viện cần thiết cho dự án
+pip install -r requirements.txt
+
 # 1. Khởi tạo cấu trúc thư mục (Chỉ chạy lần đầu)
 python src/config.py
 

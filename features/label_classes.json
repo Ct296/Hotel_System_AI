@@ -1,0 +1,39 @@
+{
+    "overall_sentiments": [
+        "positive",
+        "negative",
+        "neutral"
+    ],
+    "aspects": [
+        "FACILITIES",
+        "FOOD&DRINKS",
+        "HOTEL",
+        "LOCATION",
+        "ROOMS",
+        "ROOM_AMENITIES",
+        "SERVICE"
+    ],
+    "aspect_sentiments": [
+        "FACILITIES__negative",
+        "FACILITIES__neutral",
+        "FACILITIES__positive",
+        "FOOD&DRINKS__negative",
+        "FOOD&DRINKS__neutral",
+        "FOOD&DRINKS__positive",
+        "HOTEL__negative",
+        "HOTEL__neutral",
+        "HOTEL__positive",
+        "LOCATION__negative",
+        "LOCATION__neutral",
+        "LOCATION__positive",
+        "ROOMS__negative",
+        "ROOMS__neutral",
+        "ROOMS__positive",
+        "ROOM_AMENITIES__negative",
+        "ROOM_AMENITIES__neutral",
+        "ROOM_AMENITIES__positive",
+        "SERVICE__negative",
+        "SERVICE__neutral",
+        "SERVICE__positive"
+    ]
+}

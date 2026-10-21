@@ -57,6 +57,8 @@ def process_dataset():
 
         for aspect, sentiment in labels:
             aspect = aspect.strip()
+            if '#' in aspect:
+                aspect = aspect.split('#')[0]
             sentiment = sentiment.strip().lower()
             
             # Gộp khía cạnh và sắc thái thành 1 nhãn tổ hợp (VD: HOTEL#GENERAL__positive)

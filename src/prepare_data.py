@@ -8,7 +8,7 @@ from transformers import AutoTokenizer
 from pyvi import ViTokenizer
 from config import (
     CLEAN_CSV_FILE, LABEL_CLASSES_FILE, TOKENIZED_DATA_FILE,
-    MODEL_NAME, MAX_LEN, RANDOM_STATE, SPLITS_DATA_DIR
+    MODEL_NAME, MAX_LEN, RANDOM_STATE, SPLITS_DATA_DIR, FEATURES_DIR
 )
 
 def load_label_mappings():
@@ -88,7 +88,7 @@ def prepare_data():
         
         # Chuyển nhãn thành Tensor
         sentiment_tensors = torch.tensor(dataframe['sentiment_id'].tolist(), dtype=torch.long)
-        aspect_tensors = torch.tensor(dataframe['aspect_vector'].tolist(), dtype=torch.float32)
+        aspect_tensors = torch.tensor(np.array(dataframe['aspect_vector'].tolist()), dtype=torch.float32)
         
         # Đóng gói dữ liệu thành TensorDataset
         return torch.utils.data.TensorDataset(

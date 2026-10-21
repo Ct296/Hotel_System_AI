@@ -70,7 +70,7 @@ def predict(text, model, tokenizer, device, id2sentiment, id2aspect, abbrev_dict
         # Bắt tất cả các nhãn có xác suất > 50%
         detected_aspects = []
         for idx, prob in enumerate(aspect_probs):
-            if prob > 0.5:
+            if prob > 0.2:
                 detected_aspects.append((id2aspect[idx], prob))
                 
     return cleaned, final_sentiment, detected_aspects
