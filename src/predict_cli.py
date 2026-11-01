@@ -67,10 +67,10 @@ def predict(text, model, tokenizer, device, id2sentiment, id2aspect, abbrev_dict
         # Xử lý kết quả Khía cạnh (Dùng Sigmoid và đặt ngưỡng Threshold = 0.5)
         aspect_probs = torch.sigmoid(aspect_logits).squeeze().cpu().numpy()
         
-        # Bắt tất cả các nhãn có xác suất > 50%
+        # Bắt tất cả các nhãn có xác suất > prob%
         detected_aspects = []
         for idx, prob in enumerate(aspect_probs):
-            if prob > 0.2:
+            if prob > 0.3:
                 detected_aspects.append((id2aspect[idx], prob))
                 
     return cleaned, final_sentiment, detected_aspects

@@ -16,10 +16,11 @@ python src/prepare_data.py
 # 5. Huấn luyện mô hình (Quá trình này tốn nhiều thời gian nhất)
 python src/train_evaluate.py
 
-# 6. Chạy giao diện Console (Terminal) để test mô hình tương tác liên tục
+# 6. Chạy giao diện Terminal
+# 6.1. Chạy giao diện Console (Terminal) để test mô hình tương tác liên tục
 python src/predict_cli.py
 
-# 7. Chạy test mô hình bằng lệnh trực tiếp (Ví dụ test 1 câu)
+# 6.2. Chạy test mô hình bằng lệnh trực tiếp (Ví dụ test 1 câu)
 python src/predict_cli.py --text "Khách sạn rộng rãi, sạch nhưng nhân viên phục vụ kém và đồ ăn dở"
 
 # 8. Khởi chạy API Server cục bộ cho Spring Boot / Vue kết nối

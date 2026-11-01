@@ -65,13 +65,16 @@ def prepare_data():
     train_df, temp_df = train_test_split(df, test_size=0.2, random_state=RANDOM_STATE)
     val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=RANDOM_STATE)
     
+    # Cập nhật: Tạo thư mục splits nếu chưa có để tránh lỗi FileNotFoundError
+    SPLITS_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    
     # Lưu bản copy CSV ra
     train_df.to_csv(SPLITS_DATA_DIR / "train.csv", index=False, encoding='utf-8-sig')
     val_df.to_csv(SPLITS_DATA_DIR / "val.csv", index=False, encoding='utf-8-sig')
     test_df.to_csv(SPLITS_DATA_DIR / "test.csv", index=False, encoding='utf-8-sig')
 
     # 4. Băm văn bản (Tokenization)
-    print(f"⏳ Đang tải Tokenizer từ {MODEL_NAME}...")
+    print(f"Đang tải Tokenizer từ {MODEL_NAME}...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     
     def tokenize_dataframe(dataframe):
@@ -83,7 +86,7 @@ def prepare_data():
             padding='max_length',
             truncation=True,
             max_length=MAX_LEN,
-            return_tensors='pt' # Trả về Tensor của PyTorch
+            return_tensors='pt' 
         )
         
         # Chuyển nhãn thành Tensor
@@ -98,7 +101,7 @@ def prepare_data():
             aspect_tensors
         )
         
-    print("⏳ Đang Tokenize văn bản và ép kiểu Tensor...")
+    print("Đang Tokenize văn bản và ép kiểu Tensor...")
     train_dataset = tokenize_dataframe(train_df)
     val_dataset = tokenize_dataframe(val_df)
     test_dataset = tokenize_dataframe(test_df)
