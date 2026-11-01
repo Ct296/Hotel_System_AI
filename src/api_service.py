@@ -3,9 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import logging
-
-# Tái sử dụng trọn vẹn logic nạp mô hình và dự đoán từ predict_cli
 from predict_cli import load_environment, predict
+
 
 # Khởi tạo ứng dụng FastAPI
 app = FastAPI(
@@ -14,10 +13,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Thiết lập CORS để Vue (nếu gọi trực tiếp) hoặc Spring Boot không bị chặn kết nối
+# Thiết lập CORS để Vue
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Có thể sửa thành domain của Vue/Springboot khi deploy thực tế
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,9 +26,9 @@ app.add_middleware(
 print("⏳ Đang khởi động Server và nạp mô hình AI...")
 try:
     model, tokenizer, device, id2sentiment, id2aspect, abbrev_dict = load_environment()
-    print("✅ API Server: Đã nạp mô hình thành công. Sẵn sàng nhận Request!")
+    print("API Server: Đã nạp mô hình thành công. Sẵn sàng nhận Request!")
 except Exception as e:
-    logging.error(f"❌ Lỗi nạp mô hình, hãy đảm bảo bạn đã train AI trước: {e}")
+    logging.error(f"Lỗi nạp mô hình, hãy đảm bảo bạn đã train AI trước: {e}")
 
 # Định dạng dữ liệu đầu vào (Request Body)
 class CommentRequest(BaseModel):
@@ -40,12 +39,12 @@ class AspectDetail(BaseModel):
     aspect: str
     confidence: float
 
+# Cập nhật định dạng đầu ra backend
 class CommentResponse(BaseModel):
-    original_text: str
-    cleaned_text: str
-    overall_sentiment: str
-    details: list[AspectDetail]
-
+    raw_text: str
+    normalized_text: str
+    final_label: str
+    aspect_labels: list[str]
 
 @app.post("/api/analyze", response_model=CommentResponse)
 async def analyze_comment(request: CommentRequest):
@@ -56,27 +55,21 @@ async def analyze_comment(request: CommentRequest):
         raise HTTPException(status_code=400, detail="Văn bản không được để trống")
     
     try:
-        # Gọi hàm dự đoán
         cleaned, sentiment, aspects = predict(
             request.text, model, tokenizer, device, id2sentiment, id2aspect, abbrev_dict
         )
         
-        # Đóng gói mảng khía cạnh
-        aspects_list = [
-            {"aspect": asp, "confidence": round(float(prob), 4)} 
-            for asp, prob in aspects
-        ]
+        aspects_list = [asp for asp, prob in aspects]
         
         return {
-            "original_text": request.text,
-            "cleaned_text": cleaned,
-            "overall_sentiment": sentiment,
-            "details": aspects_list
+            "raw_text": request.text,
+            "normalized_text": cleaned,
+            "final_label": sentiment,
+            "aspect_labels": aspects_list
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi xử lý AI: {str(e)}")
-
 
 if __name__ == "__main__":
     # Khởi chạy server tại cổng 8000

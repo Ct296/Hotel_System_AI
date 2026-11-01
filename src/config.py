@@ -1,8 +1,6 @@
 from pathlib import Path
 
-# ==============================================================================
-# 1. CẤU HÌNH ĐƯỜNG DẪN (Dựa trên gốc Hotel_System_AI)
-# ==============================================================================
+# 1. CẤU HÌNH ĐƯỜNG DẪN
 SRC_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SRC_DIR.parent
 
@@ -26,9 +24,8 @@ BEST_MODEL_FILE = MODELS_DIR / "phobert_best.pt"
 # Nơi lưu trữ danh sách nhãn tự động quét được từ read_data.py
 LABEL_CLASSES_FILE = FEATURES_DIR / "label_classes.json"
 
-# ==============================================================================
+
 # 2. CẤU HÌNH MÔ HÌNH PHOBERT & HUẤN LUYỆN
-# ==============================================================================
 MODEL_NAME = "vinai/phobert-base-v2"
 MAX_LEN = 128          
 BATCH_SIZE = 16        

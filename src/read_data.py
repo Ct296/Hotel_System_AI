@@ -22,7 +22,7 @@ def determine_overall_sentiment(sentiments):
         return "neutral"
 
 def process_dataset():
-    # Kiểm tra xem file dataset.txt có tồn tại không
+    # Kiểm tra xem file dataset.txt có tồn tại
     if not DATASET_FILE.exists():
         print(f"Lỗi: Không tìm thấy file {DATASET_FILE}")
         return
@@ -97,10 +97,10 @@ def process_dataset():
         json.dump(classes_info, f, ensure_ascii=False, indent=4)
 
     # In báo cáo ra terminal
-    print(f"✅ Đã xử lý thành công {len(df)} bình luận.")
-    print(f"📊 Dữ liệu thô lưu tại: {RAW_CSV_FILE}")
-    print(f"🏷️ File cấu trúc nhãn lưu tại: {LABEL_CLASSES_FILE}")
-    print(f"🔎 Nhận diện tự động: {len(all_aspects)} khía cạnh gốc và {len(all_aspect_sentiments)} tổ hợp nhãn đa khía cạnh.")
+    print(f"Đã xử lý thành công {len(df)} bình luận.")
+    print(f"Dữ liệu thô lưu tại: {RAW_CSV_FILE}")
+    print(f"File cấu trúc nhãn lưu tại: {LABEL_CLASSES_FILE}")
+    print(f"Nhận diện tự động: {len(all_aspects)} khía cạnh gốc và {len(all_aspect_sentiments)} tổ hợp nhãn đa khía cạnh.")
 
 if __name__ == "__main__":
     process_dataset()

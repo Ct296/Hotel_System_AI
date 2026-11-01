@@ -40,19 +40,19 @@ def encode_multi_label(labels_str, aspect2id, num_classes):
 
 def prepare_data():
     if not CLEAN_CSV_FILE.exists():
-        print(f"❌ Không tìm thấy {CLEAN_CSV_FILE}. Hãy chạy clean_data.py trước.")
+        print(f"Không tìm thấy file clean - {CLEAN_CSV_FILE}.")
         return
 
-    print("⏳ Đang tải dữ liệu và từ điển nhãn...")
+    print("Đang tải dữ liệu và từ điển nhãn...")
     df = pd.read_csv(CLEAN_CSV_FILE)
     sentiment2id, aspect2id, num_aspect_classes = load_label_mappings()
     
     # 1. Word Segmentation (Tách từ ghép tiếng Việt cho PhoBERT)
-    print("⏳ Đang tách từ tiếng Việt (Word Segmentation)...")
+    print("Đang tách từ tiếng Việt (Word Segmentation)...")
     df['segmented_text'] = df['clean_text'].apply(lambda x: ViTokenizer.tokenize(str(x)))
     
     # 2. Mã hóa nhãn (Encode Labels)
-    print("⏳ Đang mã hóa nhãn (Label Encoding)...")
+    print("Đang mã hóa nhãn (Label Encoding)...")
     # Label 1: Sắc thái tổng thể (1 số nguyên)
     df['sentiment_id'] = df['overall_sentiment'].map(sentiment2id)
     
@@ -65,7 +65,7 @@ def prepare_data():
     train_df, temp_df = train_test_split(df, test_size=0.2, random_state=RANDOM_STATE)
     val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=RANDOM_STATE)
     
-    # Lưu bản copy CSV ra để dễ kiểm tra sau này
+    # Lưu bản copy CSV ra
     train_df.to_csv(SPLITS_DATA_DIR / "train.csv", index=False, encoding='utf-8-sig')
     val_df.to_csv(SPLITS_DATA_DIR / "val.csv", index=False, encoding='utf-8-sig')
     test_df.to_csv(SPLITS_DATA_DIR / "test.csv", index=False, encoding='utf-8-sig')
@@ -113,8 +113,8 @@ def prepare_data():
         'num_sentiment_classes': len(sentiment2id)
     }, TOKENIZED_DATA_FILE)
     
-    print("✅ Hoàn tất!")
-    print(f"📦 Dữ liệu Tensor đã lưu tại: {TOKENIZED_DATA_FILE}")
+    print("Hoàn tất!")
+    print(f"Dữ liệu Tensor đã lưu tại: {TOKENIZED_DATA_FILE}")
 
 if __name__ == "__main__":
     prepare_data()

@@ -7,7 +7,7 @@ Rộng rãi KS mới nhưng rất vắng. Các dịch vụ chất lượng chưa
 {LOCATION#GENERAL, positive}
 
 #3
-Phục vụ, view đẹp, vị trí
+Phục vụ, view đẹp, vị trí tốt
 {SERVICE#GENERAL, positive}, {HOTEL#GENERAL, positive}, {LOCATION#GENERAL, positive}
 
 #4

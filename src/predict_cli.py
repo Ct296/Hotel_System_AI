@@ -13,7 +13,7 @@ from config import (
 def load_environment():
     """Nạp các tài nguyên: Mapping nhãn, Tokenizer và Mô hình."""
     if not BEST_MODEL_FILE.exists() or not LABEL_CLASSES_FILE.exists():
-        print(f"❌ Thiếu file trọng số mô hình hoặc file nhãn. Vui lòng train mô hình trước.")
+        print(f"Thiếu file trọng số mô hình hoặc file nhãn. Vui lòng train mô hình trước.")
         exit(1)
 
     # 1. Load từ điển nhãn
@@ -84,17 +84,17 @@ def main():
     
     print("\n" + "="*50)
     print("✨ HỆ THỐNG AI ĐÃ SẴN SÀNG ✨")
-    print("Mô hình đang chạy trên:", "GPU 🚀" if device.type == 'cuda' else "CPU 🐢")
+    print("Mô hình đang chạy trên:", "GPU" if device.type == 'cuda' else "CPU 🐢")
     print("Nhập 'q' hoặc 'quit' để thoát.")
     print("="*50 + "\n")
 
     # Nếu người dùng truyền param --text từ terminal, chạy 1 lần rồi thoát
     if args.text:
         cleaned, sentiment, aspects = predict(args.text, model, tokenizer, device, id2sentiment, id2aspect, abbrev_dict)
-        print(f"📝 Văn bản gốc : {args.text}")
-        print(f"🧹 Đã làm sạch : {cleaned}")
-        print(f"🎯 Sắc thái chung: {sentiment.upper()}")
-        print(f"🔍 Khía cạnh chi tiết:")
+        print(f"Văn bản gốc : {args.text}")
+        print(f"Đã làm sạch : {cleaned}")
+        print(f"Sắc thái chung: {sentiment.upper()}")
+        print(f"Khía cạnh chi tiết:")
         if not aspects:
             print("  -> Không nhận diện được khía cạnh cụ thể.")
         for asp, prob in aspects:
