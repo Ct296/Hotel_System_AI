@@ -1,7 +1,8 @@
 import re
+import html
 import json
+import unicodedata
 import pandas as pd
-from pathlib import Path
 from config import RAW_CSV_FILE, CLEAN_CSV_FILE, DATA_DIR
 
 ABBREVIATIONS_FILE = DATA_DIR / "abbreviations.json"
@@ -17,10 +18,25 @@ def clean_text(text, abbrev_dict):
     if not isinstance(text, str):
         return ""
     
-    text = text.lower()
-    text = re.sub(r'https?://\S+|www\.\S+', ' ', text)
-    text = re.sub(r'(.)\1{2,}', r'\1\1', text)
+    # 1. Khắc phục các lỗi HTML entities thiếu dấu chấm phẩy (VD: H&atildey -> Hãy)
+    text = re.sub(r'&(atilde|agrave|aacute|acirc|egrave|eacute|ecirc|igrave|iacute|ograve|oacute|ocirc|otilde|ugrave|uacute|yacute)(?![a-zA-Z;])', r'&\1;', text, flags=re.IGNORECASE)
+    text = html.unescape(text)
     
+    # 2. Chuẩn hóa bảng mã tiếng Việt về chuẩn dựng sẵn NFC
+    text = unicodedata.normalize('NFC', text)
+    text = text.lower()
+    
+    # 3. Xóa URL
+    text = re.sub(r'https?://\S+|www\.\S+', ' ', text)
+    
+    # 4. Tách các dấu gạch ngang, gạch chéo hoặc dấu câu bị dính liền vào chữ (VD: "sạch sẽ-nhân viên")
+    text = re.sub(r'[-/]', ' ', text)
+    text = re.sub(r'([.,!?;:()])', r' \1 ', text)
+    
+    # 5. Rút gọn các ký tự kéo dài (VD: đẹpppp -> đẹp)
+    text = re.sub(r'(.)\1{2,}', r'\1', text)
+    
+    # 6. Chuẩn hóa từ viết tắt
     if abbrev_dict:
         for abbr, full_word in abbrev_dict.items():
             pattern = r'\b' + re.escape(abbr) + r'\b'

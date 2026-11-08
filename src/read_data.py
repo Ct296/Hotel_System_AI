@@ -4,16 +4,10 @@ import pandas as pd
 from config import DATASET_FILE, RAW_CSV_FILE, LABEL_CLASSES_FILE
 
 def determine_overall_sentiment(sentiments):
-    """
-    Tự động tính sắc thái tổng thể của câu dựa trên các nhãn khía cạnh.
-    Quy tắc: Khen > Chê -> positive | Chê > Khen -> negative | Bằng nhau -> neutral[cite: 6]
-    """
     if not sentiments:
         return "neutral"
-    
     pos_count = sentiments.count("positive")
     neg_count = sentiments.count("negative")
-    
     if pos_count > neg_count:
         return "positive"
     elif neg_count > pos_count:
@@ -26,13 +20,11 @@ def process_dataset():
         print(f"Lỗi: Không tìm thấy file {DATASET_FILE}")
         return
 
-    with open(DATASET_FILE, 'r', encoding='utf-8') as f:
+    with open(DATASET_FILE, 'r', encoding='utf-8-sig') as f:
         content = f.read()
 
-    # Regex 1: Tách từng block bình luận bắt đầu bằng #ID[cite: 6]
     entry_pattern = re.compile(r'#(\d+)\s*(.*?)\s*(?=(?:#\d+)|\Z)', re.DOTALL)
-    # Regex 2: Tách các nhãn trong ngoặc nhọn {KHÍA_CẠNH, sắc_thái}[cite: 6]
-    label_pattern = re.compile(r'\{([^,]+),\s*(positive|negative|neutral)\}')
+    label_pattern = re.compile(r'\{([^,]+),\s*(positive|negative|neutral)\}', re.IGNORECASE)
 
     data = []
     all_aspect_sentiments = set()
@@ -43,7 +35,6 @@ def process_dataset():
         block = match.group(2).strip()
 
         labels = label_pattern.findall(block)
-        
         text = label_pattern.sub('', block).strip()
         text = re.sub(r'\s+', ' ', text).strip()
 
@@ -51,7 +42,7 @@ def process_dataset():
         sentiments = []
 
         for aspect, sentiment in labels:
-            aspect = aspect.strip()
+            aspect = aspect.strip().upper()
             sentiment = sentiment.strip().lower()
             
             label_str = f"{aspect}__{sentiment}"
@@ -76,6 +67,7 @@ def process_dataset():
 
     classes_info = {
         "overall_sentiments": ["positive", "negative", "neutral"],
+        "aspect_polarities": ["none", "positive", "negative", "neutral"],
         "aspects": sorted(list(all_aspects)),
         "aspect_sentiments": sorted(list(all_aspect_sentiments))
     }
@@ -85,9 +77,7 @@ def process_dataset():
         json.dump(classes_info, f, ensure_ascii=False, indent=4)
 
     print(f"Đã xử lý thành công {len(df)} bình luận.")
-    print(f"Dữ liệu thô lưu tại: {RAW_CSV_FILE}")
-    print(f"File cấu trúc nhãn lưu tại: {LABEL_CLASSES_FILE}")
-    print(f"Nhận diện tự động: {len(all_aspects)} khía cạnh gốc và {len(all_aspect_sentiments)} tổ hợp nhãn đa khía cạnh.")
+    print(f"Nhận diện tự động: {len(all_aspects)} khía cạnh gốc và {len(all_aspect_sentiments)} tổ hợp nhãn.")
 
 if __name__ == "__main__":
     process_dataset()

@@ -4,6 +4,9 @@ pip install -r requirements.txt
 # 1. Khởi tạo cấu trúc thư mục (Chỉ chạy lần đầu)
 python src/config.py
 
+# -- đánh giá dữ liệu
+python src/check_data.py
+
 # 2. Xử lý dữ liệu thô từ file txt sang csv và tự động lấy danh sách nhãn
 python src/read_data.py
 

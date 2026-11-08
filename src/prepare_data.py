@@ -2,7 +2,6 @@ import json
 import torch
 import pandas as pd
 import numpy as np
-from pathlib import Path
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 from pyvi import ViTokenizer
@@ -12,30 +11,35 @@ from config import (
 )
 
 def load_label_mappings():
-    """Tải thông tin cấu trúc nhãn từ JSON để tạo từ điển map."""
     with open(LABEL_CLASSES_FILE, 'r', encoding='utf-8') as f:
         classes_info = json.load(f)
         
-    # Tạo mapping cho sắc thái tổng thể
     overall_sentiments = classes_info["overall_sentiments"]
     sentiment2id = {label: idx for idx, label in enumerate(overall_sentiments)}
     
-    # Tạo mapping cho đa nhãn khía cạnh (Aspect + Sentiment)
-    aspect_sentiments = classes_info["aspect_sentiments"]
-    aspect2id = {label: idx for idx, label in enumerate(aspect_sentiments)}
+    aspects = classes_info["aspects"]
+    aspect2id = {aspect: idx for idx, aspect in enumerate(aspects)}
     
-    return sentiment2id, aspect2id, len(aspect_sentiments)
+    polarities = classes_info.get("aspect_polarities", ["none", "positive", "negative", "neutral"])
+    polarity2id = {pol: idx for idx, pol in enumerate(polarities)}
+    
+    return sentiment2id, aspect2id, polarity2id
 
-def encode_multi_label(labels_str, aspect2id, num_classes):
-    """Chuyển đổi chuỗi đa nhãn (phân cách bằng |) thành vector Multi-hot (0 và 1)."""
-    vector = np.zeros(num_classes, dtype=np.float32)
+def encode_aspect_polarities(labels_str, aspect2id, polarity2id):
+    """
+    Chuyển chuỗi 'HOTEL#COMFORT__positive|SERVICE#GENERAL__negative'
+    thành vector kích thước (num_aspects,) với giá trị:
+    0: none, 1: positive, 2: negative, 3: neutral
+    """
+    vector = np.zeros(len(aspect2id), dtype=np.int64) # Mặc định 0 là 'none'
     if not isinstance(labels_str, str) or not labels_str.strip():
         return vector
         
-    labels = labels_str.split('|')
-    for label in labels:
-        if label in aspect2id:
-            vector[aspect2id[label]] = 1.0
+    for item in labels_str.split('|'):
+        if '__' in item:
+            aspect, pol = item.split('__', 1)
+            if aspect in aspect2id and pol in polarity2id:
+                vector[aspect2id[aspect]] = polarity2id[pol]
     return vector
 
 def prepare_data():
@@ -45,42 +49,35 @@ def prepare_data():
 
     print("Đang tải dữ liệu và từ điển nhãn...")
     df = pd.read_csv(CLEAN_CSV_FILE)
-    sentiment2id, aspect2id, num_aspect_classes = load_label_mappings()
+    sentiment2id, aspect2id, polarity2id = load_label_mappings()
     
-    # 1. Word Segmentation (Tách từ ghép tiếng Việt cho PhoBERT)
     print("Đang tách từ tiếng Việt (Word Segmentation)...")
     df['segmented_text'] = df['clean_text'].apply(lambda x: ViTokenizer.tokenize(str(x)))
     
-    # 2. Mã hóa nhãn (Encode Labels)
     print("Đang mã hóa nhãn (Label Encoding)...")
-    # Label 1: Sắc thái tổng thể (1 số nguyên)
     df['sentiment_id'] = df['overall_sentiment'].map(sentiment2id)
-    
-    # Label 2: Khía cạnh đa nhãn (Mảng multi-hot)
-    df['aspect_vector'] = df['aspect_labels'].apply(
-        lambda x: encode_multi_label(x, aspect2id, num_aspect_classes)
+    df['aspect_targets'] = df['aspect_labels'].apply(
+        lambda x: encode_aspect_polarities(x, aspect2id, polarity2id)
     )
     
-    # 3. Chia tập dữ liệu (Train: 80%, Val: 10%, Test: 10%)
-    train_df, temp_df = train_test_split(df, test_size=0.2, random_state=RANDOM_STATE)
-    val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=RANDOM_STATE)
+    # Chia tập dữ liệu có phân tầng (stratify) để giữ nguyên tỷ lệ nhãn
+    train_df, temp_df = train_test_split(
+        df, test_size=0.2, random_state=RANDOM_STATE, stratify=df['sentiment_id']
+    )
+    val_df, test_df = train_test_split(
+        temp_df, test_size=0.5, random_state=RANDOM_STATE, stratify=temp_df['sentiment_id']
+    )
     
-    # Cập nhật: Tạo thư mục splits nếu chưa có để tránh lỗi FileNotFoundError
     SPLITS_DATA_DIR.mkdir(parents=True, exist_ok=True)
-    
-    # Lưu bản copy CSV ra
     train_df.to_csv(SPLITS_DATA_DIR / "train.csv", index=False, encoding='utf-8-sig')
     val_df.to_csv(SPLITS_DATA_DIR / "val.csv", index=False, encoding='utf-8-sig')
     test_df.to_csv(SPLITS_DATA_DIR / "test.csv", index=False, encoding='utf-8-sig')
 
-    # 4. Băm văn bản (Tokenization)
     print(f"Đang tải Tokenizer từ {MODEL_NAME}...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     
     def tokenize_dataframe(dataframe):
         texts = dataframe['segmented_text'].tolist()
-        
-        # Tokenize hàng loạt
         encoded = tokenizer(
             texts,
             padding='max_length',
@@ -88,12 +85,9 @@ def prepare_data():
             max_length=MAX_LEN,
             return_tensors='pt' 
         )
-        
-        # Chuyển nhãn thành Tensor
         sentiment_tensors = torch.tensor(dataframe['sentiment_id'].tolist(), dtype=torch.long)
-        aspect_tensors = torch.tensor(np.array(dataframe['aspect_vector'].tolist()), dtype=torch.float32)
+        aspect_tensors = torch.tensor(np.array(dataframe['aspect_targets'].tolist()), dtype=torch.long)
         
-        # Đóng gói dữ liệu thành TensorDataset
         return torch.utils.data.TensorDataset(
             encoded['input_ids'],
             encoded['attention_mask'],
@@ -101,23 +95,22 @@ def prepare_data():
             aspect_tensors
         )
         
-    print("Đang Tokenize văn bản và ép kiểu Tensor...")
+    print("Đang Tokenize văn bản và đóng gói Tensor...")
     train_dataset = tokenize_dataframe(train_df)
     val_dataset = tokenize_dataframe(val_df)
     test_dataset = tokenize_dataframe(test_df)
     
-    # 5. Lưu toàn bộ file `.pt`
     FEATURES_DIR.mkdir(parents=True, exist_ok=True)
     torch.save({
         'train': train_dataset,
         'val': val_dataset,
         'test': test_dataset,
-        'num_aspect_classes': num_aspect_classes,
+        'num_aspects': len(aspect2id),
+        'num_polarities': len(polarity2id),
         'num_sentiment_classes': len(sentiment2id)
     }, TOKENIZED_DATA_FILE)
     
-    print("Hoàn tất!")
-    print(f"Dữ liệu Tensor đã lưu tại: {TOKENIZED_DATA_FILE}")
+    print(f"Hoàn tất! Dữ liệu Tensor đã lưu tại: {TOKENIZED_DATA_FILE}")
 
 if __name__ == "__main__":
     prepare_data()
