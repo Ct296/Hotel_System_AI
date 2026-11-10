@@ -429,7 +429,7 @@ def train(eval_only=False):
             patience_counter = 0
             BEST_MODEL_FILE.parent.mkdir(parents=True, exist_ok=True)
             torch.save(model.state_dict(), BEST_MODEL_FILE)
-            print(f"  -> 💾 Đã lưu Best Model mới tại Epoch {best_epoch} (Combined Score: {best_score*100:.2f}%)")
+            print(f"  -> Đã lưu Best Model mới tại Epoch {best_epoch} (Combined Score: {best_score*100:.2f}%)")
         else:
             patience_counter += 1
             print(

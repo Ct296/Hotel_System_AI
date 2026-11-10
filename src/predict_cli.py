@@ -131,7 +131,7 @@ def main():
     model, tokenizer, device, id2sentiment, id2aspect, id2polarity, abbrev_dict = load_environment()
     
     print("\n" + "="*50)
-    print("✨ HỆ THỐNG AI ĐÃ SẴN SÀNG ✨")
+    print("HỆ THỐNG AI ĐÃ SẴN SÀNG ✨")
     print("Mô hình đang chạy trên:", "GPU" if device.type == 'cuda' else "CPU 🐢")
     print("Nhập 'q' hoặc 'quit' để thoát.")
     print("="*50 + "\n")
@@ -163,8 +163,8 @@ def main():
                 text, model, tokenizer, device, id2sentiment, id2aspect, id2polarity, abbrev_dict
             )
             
-            print(f"  => 🎯 Sắc thái chung: [{sentiment.upper()}]")
-            print("  => 🔍 Chi tiết:")
+            print(f"  => Sắc thái chung: [{sentiment.upper()}]")
+            print("  => Chi tiết:")
             if not aspects:
                 print("     (Không nhận diện được khía cạnh)")
             for asp, prob in aspects:

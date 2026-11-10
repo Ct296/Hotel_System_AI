@@ -4,6 +4,12 @@
         "negative",
         "neutral"
     ],
+    "aspect_polarities": [
+        "none",
+        "positive",
+        "negative",
+        "neutral"
+    ],
     "aspects": [
         "FACILITIES#CLEANLINESS",
         "FACILITIES#COMFORT",

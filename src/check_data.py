@@ -279,7 +279,7 @@ def run_data_audit():
     chart_path = METRICS_DIR / "data_distribution.png"
     plt.savefig(chart_path, dpi=300)
     plt.close()
-    print(f"📊 Đã lưu biểu đồ phân phối dữ liệu tại: {chart_path}")
+    print(f"Đã lưu biểu đồ phân phối dữ liệu tại: {chart_path}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,113 @@
+===========================================================================
+📊 BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)
+===========================================================================
+1. KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY):
+   - Tổng số mẫu (comment) quét được       : 3000 mẫu
+   - Số mẫu CÓ NHÃN nhưng TRỐNG COMMENT    : 0 mẫu (Không có - Rất tốt ✅)
+   - Số mẫu CÓ COMMENT nhưng TRỐNG NHÃN    : 0 mẫu (Không có - Rất tốt ✅)
+   - Số mẫu bị dính mã lỗi HTML (&atilde..): 90 mẫu (VD ID: ['9', '12', '93', '132', '134'])
+   - Số mẫu gán trùng/mâu thuẫn khía cạnh  : 1 trường hợp (VD: [('880', 'ROOMS#MISCELLANEOUS', 'negative', 'negative')])
+   - Số cụm bình luận trùng lặp nội dung   : 26 cụm
+
+---------------------------------------------------------------------------
+2. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN (CƠ SỞ KHOA HỌC ĐỂ CHỌN MAX_LEN):
+   a) Theo số âm tiết (Từ đơn tách theo khoảng trắng):
+      + Ngắn nhất : 1 từ (Câu #416: "Tốt")
+      + Dài nhất  : 1027 từ (Câu #1485: "Gia đình mình đã có 4 ngày 3 đêm lưu trú tại Cửu Long Phú Quốc resort...")
+      + Trung bình: 62.1 ± 58.5 từ | Trung vị (Median): 48 từ
+
+   b) Theo từ ghép tiếng Việt (Sau khi qua PyVi ViTokenizer):
+      + Ngắn nhất : 1 từ ghép | Dài nhất: 997 từ ghép | Trung bình: 57.6 từ ghép
+
+   c) Theo Subword Token thực tế của PhoBERT (Đầu vào trực tiếp của mạng):
+      + Ngắn nhất : 3 tokens | Dài nhất: 1017 tokens (Câu #1485)
+      + Trung bình: 62.3 tokens | Trung vị: 47 tokens
+      + Phân vị 90% (90th percentile): 124 tokens
+      + Phân vị 95% (95th percentile): 162 tokens
+      + Phân vị 99% (99th percentile): 248 tokens
+      + Phân vị 99.5%                : 335 tokens
+
+   d) Bảng độ phủ dữ liệu theo từng mốc MAX_LEN (Trả lời phản biện hội đồng):
+      - MAX_LEN =  64 -> Bao phủ toàn vẹn  69.60% dữ liệu (Chỉ có 912/3000 câu bị cắt bớt)
+      - MAX_LEN = 128 -> Bao phủ toàn vẹn  90.80% dữ liệu (Chỉ có 276/3000 câu bị cắt bớt)
+      - MAX_LEN = 160 -> Bao phủ toàn vẹn  94.87% dữ liệu (Chỉ có 154/3000 câu bị cắt bớt)
+      - MAX_LEN = 192 -> Bao phủ toàn vẹn  97.27% dữ liệu (Chỉ có  82/3000 câu bị cắt bớt)
+      - MAX_LEN = 256 -> Bao phủ toàn vẹn  99.07% dữ liệu (Chỉ có  28/3000 câu bị cắt bớt)
+
+   => 💡 KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = 256 (Bao phủ >= 99.5% câu mà không lãng phí bộ nhớ đệm).
+
+---------------------------------------------------------------------------
+3. THỐNG KÊ MẬT ĐỘ KHÍA CẠNH TRÊN MỖI BÌNH LUẬN:
+   - Tổng số lượt nhãn (aspect-polarity)   : 13949 lượt nhãn
+   - Trung bình số khía cạnh / 1 bình luận : 4.65 khía cạnh/câu
+   - Ít nhất  : 1 khía cạnh | Nhiều nhất: 14 khía cạnh (Câu #1860)
+   - Phân phối số lượng khía cạnh trong 1 câu:
+      + Câu có  1 khía cạnh:  143 câu ( 4.77%)
+      + Câu có  2 khía cạnh:  312 câu (10.40%)
+      + Câu có  3 khía cạnh:  522 câu (17.40%)
+      + Câu có  4 khía cạnh:  583 câu (19.43%)
+      + Câu có  5 khía cạnh:  506 câu (16.87%)
+      + Câu có  6 khía cạnh:  383 câu (12.77%)
+      + Câu có  7 khía cạnh:  257 câu ( 8.57%)
+      + Câu có  8 khía cạnh:  141 câu ( 4.70%)
+      + Câu có  9 khía cạnh:   77 câu ( 2.57%)
+      + Câu có 10 khía cạnh:   36 câu ( 1.20%)
+      + Câu có 11 khía cạnh:   19 câu ( 0.63%)
+      + Câu có 12 khía cạnh:   10 câu ( 0.33%)
+      + Câu có 13 khía cạnh:    7 câu ( 0.23%)
+      + Câu có 14 khía cạnh:    4 câu ( 0.13%)
+
+---------------------------------------------------------------------------
+4. THỐNG KÊ PHÂN PHỐI CẢM XÚC & BẤT CÂN BẰNG DỮ LIỆU (CLASS IMBALANCE):
+   a) Phân phối Cảm xúc tổng thể (Overall Sentiment của cả câu):
+      + Positive (Tích cực)  : 2295 câu (76.50%)
+      + Negative (Tiêu cực)  :  503 câu (16.77%)
+      + Neutral  (Trung tính):  202 câu ( 6.73%)
+
+   b) Phân phối Cảm xúc tính trên tổng số lượt khía cạnh:
+      + Lượt khen (Positive) : 10229 lượt (73.33%)
+      + Lượt chê  (Negative) : 3150 lượt (22.58%)
+      + Trung lập (Neutral)  :  570 lượt ( 4.09%)
+
+   c) Thống kê độ hiếm của tổ hợp nhãn (Giải thích tại sao dùng Micro-F1 & Weighted-F1):
+      + Tổng số khía cạnh gốc              : 33 khía cạnh
+      + Tổng số tổ hợp (Aspect + Polarity) : 92 tổ hợp có xuất hiện
+      + Số tổ hợp SIÊU HIẾM (< 15 mẫu/3000 câu): 24/92 tổ hợp (26.1%)
+
+   d) Bảng chi tiết toàn bộ các Khía cạnh (Sắp xếp từ phổ biến nhất đến hiếm nhất):
+      STT  TÊN KHÍA CẠNH                         TỔNG |   POS   NEG   NEU
+      -----------------------------------------------------------------
+      1    SERVICE#GENERAL                       1912 |  1587   229    96
+      2    HOTEL#GENERAL                         1282 |  1106    99    77
+      3    LOCATION#GENERAL                      1196 |   991   154    51
+      4    HOTEL#COMFORT                         1139 |  1031   101     7
+      5    ROOMS#DESIGN&FEATURES                  916 |   590   279    47
+      6    HOTEL#DESIGN&FEATURES                  877 |   731   120    26
+      7    FOOD&DRINKS#QUALITY                    672 |   447   161    64
+      8    ROOMS#CLEANLINESS                      658 |   524   127     7
+      9    FOOD&DRINKS#STYLE&OPTIONS              569 |   206   336    27
+      10   FACILITIES#DESIGN&FEATURES             525 |   330   166    29
+      11   HOTEL#PRICES                           496 |   412    72    12
+      12   ROOMS#COMFORT                          434 |   338    88     8
+      13   ROOM_AMENITIES#DESIGN&FEATURES         354 |   130   211    13
+      14   HOTEL#CLEANLINESS                      348 |   311    34     3
+      15   ROOMS#GENERAL                          256 |   187    35    34
+      16   HOTEL#QUALITY                          246 |   163    77     6
+      17   ROOM_AMENITIES#QUALITY                 239 |    66   170     3
+      18   FACILITIES#GENERAL                     219 |   184    25    10
+      19   ROOM_AMENITIES#GENERAL                 216 |   155    47    14
+      20   FACILITIES#QUALITY                     208 |   102   101     5
+      21   ROOMS#PRICES                           196 |   132    57     7
+      22   FACILITIES#CLEANLINESS                 172 |   121    50     1
+      23   ROOMS#QUALITY                          164 |    91    61    12
+      24   FACILITIES#COMFORT                     132 |    87    44     1
+      25   FOOD&DRINKS#PRICES                     118 |    44    68     6
+      26   HOTEL#MISCELLANEOUS                    108 |    26    82     0
+      27   ROOM_AMENITIES#COMFORT                 100 |    57    41     2
+      28   ROOM_AMENITIES#CLEANLINESS              89 |    29    60     0
+      29   FACILITIES#PRICES                       53 |    30    22     1
+      30   FACILITIES#MISCELLANEOUS                33 |    14    19     0
+      31   FOOD&DRINKS#MISCELLANEOUS               13 |     7     5     1
+      32   ROOMS#MISCELLANEOUS                      6 |     0     6     0
+      33   ROOM_AMENITIES#MISCELLANEOUS             3 |     0     3     0
+===========================================================================
