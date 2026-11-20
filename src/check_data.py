@@ -158,22 +158,22 @@ def run_data_audit():
     # ==================== XUẤT BÁO CÁO ====================
     lines = [
         "=" * 75,
-        "📊 BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)",
+        "BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)",
         "=" * 75,
         f"1. KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY):",
         f"   - Tổng số mẫu (comment) quét được       : {len(entries)} mẫu",
         f"   - Số mẫu CÓ NHÃN nhưng TRỐNG COMMENT    : {len(empty_text_ids)} mẫu "
-        f"{f'(ID: {empty_text_ids})' if empty_text_ids else '(Không có - Rất tốt ✅)'}",
+        f"{f'(ID: {empty_text_ids})' if empty_text_ids else '(Không có)'}",
         f"   - Số mẫu CÓ COMMENT nhưng TRỐNG NHÃN    : {len(empty_label_ids)} mẫu "
-        f"{f'(ID: {empty_label_ids})' if empty_label_ids else '(Không có - Rất tốt ✅)'}",
+        f"{f'(ID: {empty_label_ids})' if empty_label_ids else '(Không có)'}",
         f"   - Số mẫu bị dính mã lỗi HTML (&atilde..): {len(html_error_ids)} mẫu "
         f"{f'(VD ID: {[x[0] for x in html_error_ids[:5]]})' if html_error_ids else '(Không có)'}",
         f"   - Số mẫu gán trùng/mâu thuẫn khía cạnh  : {len(conflict_aspect_ids)} trường hợp "
-        f"{f'(VD: {conflict_aspect_ids[:3]})' if conflict_aspect_ids else '(Không có ✅)'}",
+        f"{f'(VD: {conflict_aspect_ids[:3]})' if conflict_aspect_ids else '(Không có)'}",
         f"   - Số cụm bình luận trùng lặp nội dung   : {len(duplicate_groups)} cụm",
         "",
         "-" * 75,
-        "2. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN (CƠ SỞ KHOA HỌC ĐỂ CHỌN MAX_LEN):",
+        "2. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN:",
         f"   a) Theo số âm tiết (Từ đơn tách theo khoảng trắng):",
         f"      + Ngắn nhất : {shortest_raw[0]} từ (Câu #{shortest_raw[1]}: \"{shortest_raw[2]}\")",
         f"      + Dài nhất  : {longest_raw[0]} từ (Câu #{longest_raw[1]}: \"{longest_raw[2][:70]}...\")",
@@ -190,7 +190,7 @@ def run_data_audit():
         f"      + Phân vị 99% (99th percentile): {p99_bpe} tokens",
         f"      + Phân vị 99.5%                : {p995_bpe} tokens",
         "",
-        "   d) Bảng độ phủ dữ liệu theo từng mốc MAX_LEN (Trả lời phản biện hội đồng):",
+        "   d) Bảng độ phủ dữ liệu theo từng mốc MAX_LEN:",
     ]
 
     for m_len, (cov, trunc_cnt) in coverage_stats.items():
@@ -199,7 +199,7 @@ def run_data_audit():
         )
 
     lines.extend([
-        f"\n   => 💡 KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = {recommended_max_len} (Bao phủ >= 99.5% câu mà không lãng phí bộ nhớ đệm).",
+        f"\n   => KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = {recommended_max_len} (Bao phủ >= 99.5% câu mà không lãng phí bộ nhớ đệm).",
         "",
         "-" * 75,
         "3. THỐNG KÊ MẬT ĐỘ KHÍA CẠNH TRÊN MỖI BÌNH LUẬN:",
@@ -228,7 +228,7 @@ def run_data_audit():
         f"      + Lượt chê  (Negative) : {polarity_total_counter['negative']:4d} lượt ({polarity_total_counter['negative']/asp_counts.sum()*100:5.2f}%)",
         f"      + Trung lập (Neutral)  : {polarity_total_counter['neutral']:4d} lượt ({polarity_total_counter['neutral']/asp_counts.sum()*100:5.2f}%)",
         "",
-        f"   c) Thống kê độ hiếm của tổ hợp nhãn (Giải thích tại sao dùng Micro-F1 & Weighted-F1):",
+        f"   c) Thống kê độ hiếm của tổ hợp nhãn:",
         f"      + Tổng số khía cạnh gốc              : {len(aspect_counter)} khía cạnh",
         f"      + Tổng số tổ hợp (Aspect + Polarity) : {total_valid_pairs} tổ hợp có xuất hiện",
         f"      + Số tổ hợp SIÊU HIẾM (< 15 mẫu/3000 câu): {len(rare_pairs)}/{total_valid_pairs} tổ hợp ({len(rare_pairs)/total_valid_pairs*100:.1f}%)",
@@ -253,7 +253,7 @@ def run_data_audit():
     report_path = METRICS_DIR / "data_audit_report.txt"
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(report_str)
-    print(f"\n📄 Đã xuất báo cáo kiểm định dữ liệu ra file: {report_path}")
+    print(f"\n Đã xuất báo cáo kiểm định dữ liệu ra file: {report_path}")
 
     # Vẽ biểu đồ phân phối độ dài Token và Số lượng khía cạnh để đưa vào Luận văn
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))

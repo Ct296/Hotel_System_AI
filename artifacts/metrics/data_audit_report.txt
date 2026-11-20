@@ -1,16 +1,16 @@
 ===========================================================================
-📊 BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)
+BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)
 ===========================================================================
 1. KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY):
    - Tổng số mẫu (comment) quét được       : 3000 mẫu
-   - Số mẫu CÓ NHÃN nhưng TRỐNG COMMENT    : 0 mẫu (Không có - Rất tốt ✅)
-   - Số mẫu CÓ COMMENT nhưng TRỐNG NHÃN    : 0 mẫu (Không có - Rất tốt ✅)
+   - Số mẫu CÓ NHÃN nhưng TRỐNG COMMENT    : 0 mẫu (Không có)
+   - Số mẫu CÓ COMMENT nhưng TRỐNG NHÃN    : 0 mẫu (Không có)
    - Số mẫu bị dính mã lỗi HTML (&atilde..): 90 mẫu (VD ID: ['9', '12', '93', '132', '134'])
    - Số mẫu gán trùng/mâu thuẫn khía cạnh  : 1 trường hợp (VD: [('880', 'ROOMS#MISCELLANEOUS', 'negative', 'negative')])
    - Số cụm bình luận trùng lặp nội dung   : 26 cụm
 
 ---------------------------------------------------------------------------
-2. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN (CƠ SỞ KHOA HỌC ĐỂ CHỌN MAX_LEN):
+2. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN:
    a) Theo số âm tiết (Từ đơn tách theo khoảng trắng):
       + Ngắn nhất : 1 từ (Câu #416: "Tốt")
       + Dài nhất  : 1027 từ (Câu #1485: "Gia đình mình đã có 4 ngày 3 đêm lưu trú tại Cửu Long Phú Quốc resort...")
@@ -27,14 +27,14 @@
       + Phân vị 99% (99th percentile): 248 tokens
       + Phân vị 99.5%                : 335 tokens
 
-   d) Bảng độ phủ dữ liệu theo từng mốc MAX_LEN (Trả lời phản biện hội đồng):
+   d) Bảng độ phủ dữ liệu theo từng mốc MAX_LEN:
       - MAX_LEN =  64 -> Bao phủ toàn vẹn  69.60% dữ liệu (Chỉ có 912/3000 câu bị cắt bớt)
       - MAX_LEN = 128 -> Bao phủ toàn vẹn  90.80% dữ liệu (Chỉ có 276/3000 câu bị cắt bớt)
       - MAX_LEN = 160 -> Bao phủ toàn vẹn  94.87% dữ liệu (Chỉ có 154/3000 câu bị cắt bớt)
       - MAX_LEN = 192 -> Bao phủ toàn vẹn  97.27% dữ liệu (Chỉ có  82/3000 câu bị cắt bớt)
       - MAX_LEN = 256 -> Bao phủ toàn vẹn  99.07% dữ liệu (Chỉ có  28/3000 câu bị cắt bớt)
 
-   => 💡 KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = 256 (Bao phủ >= 99.5% câu mà không lãng phí bộ nhớ đệm).
+   => KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = 256 (Bao phủ >= 99.5% câu mà không lãng phí bộ nhớ đệm).
 
 ---------------------------------------------------------------------------
 3. THỐNG KÊ MẬT ĐỘ KHÍA CẠNH TRÊN MỖI BÌNH LUẬN:
@@ -69,7 +69,7 @@
       + Lượt chê  (Negative) : 3150 lượt (22.58%)
       + Trung lập (Neutral)  :  570 lượt ( 4.09%)
 
-   c) Thống kê độ hiếm của tổ hợp nhãn (Giải thích tại sao dùng Micro-F1 & Weighted-F1):
+   c) Thống kê độ hiếm của tổ hợp nhãn:
       + Tổng số khía cạnh gốc              : 33 khía cạnh
       + Tổng số tổ hợp (Aspect + Polarity) : 92 tổ hợp có xuất hiện
       + Số tổ hợp SIÊU HIẾM (< 15 mẫu/3000 câu): 24/92 tổ hợp (26.1%)
