@@ -15,7 +15,17 @@ Dự án ứng dụng mô hình ngôn ngữ tiền huấn luyện **PhoBERT (`vi
 
 ---
 
-## 2. Cấu Trúc Thư Mục
+## 2. Thông Tin Tập Dữ Liệu & Số Lượng Lớp (Dataset)
+
+Tập dữ liệu gồm **3.000 mẫu bình luận** đánh giá khách sạn bằng tiếng Việt (tổng cộng 13.949 lượt gán nhãn khía cạnh), được chia theo tỷ lệ **80% Train / 10% Validation / 10% Test** (300 mẫu kiểm thử). Số lượng lớp đầu ra của hệ thống được chốt theo 2 nhánh bài toán như sau:
+
+* **Nhánh 1 – Sắc thái tổng thể (Overall Sentiment):** Gồm **3 lớp** (`positive`, `negative`, `neutral`).
+* **Nhánh 2 – Đa khía cạnh (Multi-Aspect ABSA):** Gồm **33 khía cạnh**, mỗi khía cạnh được phân loại vào **4 lớp trạng thái** (`none` – không đề cập, `positive`, `negative`, `neutral`).
+  * *Ghi chú thống kê tổ hợp nhãn:* Theo lý thuyết có tối đa **99 tổ hợp** (33 khía cạnh × 3 sắc thái), nhưng thực tế trên toàn bộ 3.000 mẫu chỉ xuất hiện **92 tổ hợp** (và **76 tổ hợp** trong tập Test). Để mô hình có thể dự đoán độc lập mọi khía cạnh mà không bị bó buộc vào các tổ hợp cứng, kiến trúc nhánh này chọn đầu ra là **33 × 4 trạng thái** (tương ứng 33 bài toán phân loại 4 lớp chạy song song).
+
+---
+
+## 3. Cấu Trúc Thư Mục
 
 ```text
 Hotel_System_AI/
@@ -45,7 +55,7 @@ Hotel_System_AI/
 
 ---
 
-## 3. Quy Trình Cài Đặt Và Sử Dụng (Kế thừa từ `code.txt`)
+## 4. Quy Trình Cài Đặt Và Sử Dụng (Kế thừa từ `code.txt`)
 
 ### Bước 0: Cài đặt thư viện cần thiết
 Yêu cầu hệ thống đã cài đặt Python (khuyến nghị Python 3.9+). Chạy lệnh sau tại thư mục gốc của dự án để cài đặt toàn bộ thư viện:
@@ -58,7 +68,7 @@ Khởi tạo cấu trúc đường dẫn (chỉ cần chạy lần đầu):
 ```bash
 python src/config.py
 ```
-Chạy công cụ kiểm định tính toàn vẹn của dữ liệu, thống kê phân bố nhãn, đo độ dài Subword Token để chọn `MAX_LEN` tối ưu và xuất biểu đồ vào `artifacts/metrics/`:
+Chạy công cụ kiểm định tính toàn vẹn của dữ liệu, thống kê số lượng lớp, phân bố nhãn, đo độ dài Subword Token để chọn `MAX_LEN` tối ưu và xuất biểu đồ vào `artifacts/metrics/`:
 ```bash
 python src/check_data.py
 ```
@@ -75,16 +85,32 @@ Xử lý lỗi mã HTML, chuẩn hóa Unicode, loại bỏ ký tự kéo dài, b
 python src/clean_data.py
 ```
 
-### Bước 4: Tokenize dữ liệu và đóng gói Tensor
-Tách từ tiếng Việt bằng `PyVi`, chia dữ liệu có phân tầng (Stratified Split) theo tỷ lệ 80% Train - 10% Validation - 10% Test, sau đó mã hóa bằng PhoBERT Tokenizer và lưu thành file `features/tokenized_data.pt`:
+### Bước 4: Tokenize dữ liệu & Chuẩn bị đầu vào cho PhoBERT
+Tách từ ghép tiếng Việt bằng `PyVi`, chia dữ liệu có phân tầng (Stratified Split) theo tỷ lệ 80% Train - 10% Validation - 10% Test, sau đó mã hóa văn bản bằng **PhoBERT Tokenizer (`vinai/phobert-base-v2`)** và đóng gói thành Tensor tại `features/tokenized_data.pt`:
 ```bash
 python src/prepare_data.py
 ```
 
-### Bước 5: Huấn luyện và đánh giá mô hình
-Huấn luyện mô hình Multi-task PhoBERT (quá trình này tốn nhiều thời gian nhất, khuyến nghị chạy trên máy có GPU CUDA):
+### Bước 5: Rút trích đặc trưng, Huấn luyện và Đánh giá mô hình
+
+Chạy quy trình rút trích đặc trưng bằng **PhoBERT** và huấn luyện mô hình Multi-task (khuyến nghị chạy trên máy có GPU CUDA):
+
+* **Kiến trúc mô hình sử dụng (2 thành phần chính):**
+  1. **Bộ rút trích đặc trưng – PhoBERT (`vinai/phobert-base-v2`):** Tiếp nhận chuỗi token đã tách từ, tinh chỉnh (fine-tune) trọng số để biểu diễn ngữ cảnh câu và gộp `CLS Token` + `Mean Pooling` thành vector đặc trưng **1536 chiều** (`pooled_output`).
+  2. **Bộ phân loại – 2 nhánh mạng nơ-ron truyền thẳng (FFNN) chạy song song:** Cùng nhận đầu vào là vector 1536 chiều từ PhoBERT *(đi qua các lớp tuyến tính, hàm kích hoạt `[GELU / ReLU - điền theo train_evaluate.py]` và `[Dropout]`)* gồm:
+     * `sentiment_head`: Dự đoán **3 lớp** sắc thái tổng thể.
+     * `aspect_head`: Dự đoán **33 × 4 lớp** trạng thái cho 33 khía cạnh.
+
 ```bash
 python src/train_evaluate.py
+```
+* **Luồng huấn luyện & kiểm thử trong `train_evaluate.py`:**
+```text
+for (tối đa 10 epoch, có dừng sớm - Early Stopping với patience = 3) {
+    Train      (Cập nhật đồng thời PhoBERT + 2 nhánh FFNN)
+      -> Validation (Kiểm định trên tập Val & lưu Best Model)
+}
+-> Test (Chạy đánh giá 1 lần duy nhất với Best Model tốt nhất)
 ```
 * **Lưu ý:** Nếu bạn đã có sẵn file trọng số `artifacts/models/phobert_best.pt` và chỉ muốn chạy lại bước đánh giá trên tập Test mà không cần huấn luyện lại từ đầu, hãy dùng cờ `--eval-only`:
 ```bash
@@ -113,7 +139,7 @@ python src/api_service.py
 
 ---
 
-## 4. Đặc Tả API (Dành cho Tích Hợp Hệ Thống)
+## 5. Đặc Tả API (Dành cho Tích Hợp Hệ Thống)
 
 * **Endpoint:** `POST /api/analyze`
 * **URL cục bộ:** `http://localhost:8000/api/analyze`
@@ -143,10 +169,21 @@ python src/api_service.py
 
 ---
 
-## 5. Thông Số Kỹ Thuật & Kết Quả Thực Nghiệm
+## 6. Kiến Trúc, Thông Số Kỹ Thuật & Kết Quả Thực Nghiệm
 
-### Cấu hình huấn luyện (`src/config.py`)
-* **Mô hình nền tảng:** `vinai/phobert-base-v2` (Kết hợp `CLS Token` + `Mean Pooling`, kích thước vector đặc trưng 1536 chiều).
+### Cơ chế rút trích đặc trưng & Luồng huấn luyện (`src/train_evaluate.py`)
+* **Bước rút trích đặc trưng (Feature Extraction):** Sử dụng mô hình ngôn ngữ tiền huấn luyện **PhoBERT (`vinai/phobert-base-v2`)** để trích xuất biểu diễn ngữ cảnh của câu bình luận, sau đó ghép nối vector `CLS Token` (768 chiều) và `Mean Pooling` (768 chiều) tạo thành vector đặc trưng tổng hợp **1536 chiều (`pooled_output`)**.
+* **Cơ chế huấn luyện theo từng Batch:**
+  * **Chiều xuôi (`forward`):**
+    1. **PhoBERT** chạy trước để rút trích ngữ cảnh và tạo ra vector `pooled_output` 1536 chiều.
+    2. **2 nhánh FFNN** (`sentiment_head` và `aspect_head`) hoạt động độc lập và song song trên cùng vector 1536 chiều để dự đoán đồng thời cảm xúc tổng thể và 33 khía cạnh.
+  * **Chiều ngược (`backward` & `optimizer.step()`):**
+    1. Cộng gộp hàm mất mát đa nhiệm của 2 nhánh: $L_{total} = L_{sentiment} + 2.0 \times L_{aspect}$.
+    2. Lan truyền ngược (`loss.backward()`): Đạo hàm được tính ngược từ 2 nhánh FFNN truyền về PhoBERT.
+    3. Cập nhật trọng số (`optimizer.step()`): Trọng số của **cả PhoBERT lẫn 2 nhánh FFNN** được cập nhật đồng thời cùng lúc.
+* **Vòng lặp huấn luyện & Kiểm thử:** Thực hiện tối đa **10 epochs** tích hợp cơ chế dừng sớm (**Early Stopping**, `patience = 3`). Ở mỗi epoch, mô hình chạy `Train` để cập nhật trọng số, sau đó đánh giá trên tập `Validation` để lưu lại `Best Model` (`phobert_best.pt`). Sau khi kết thúc vòng lặp, hệ thống nạp lại `Best Model` để chạy đánh giá **1 lần duy nhất trên tập `Test`**.
+
+### Cấu hình siêu tham số (`src/config.py`)
 * **Độ dài tối đa (`MAX_LEN`):** `256` subword tokens (bao phủ trọn vẹn >99% dữ liệu bình luận thực tế).
 * **Batch Size:** `16` | **Learning Rate:** `2e-5` | **Weight Decay:** `0.01`
 * **Số vòng lặp tối đa (`EPOCHS`):** `10` (Tích hợp `Early Stopping` với `Patience = 3`).

@@ -1,5 +1,6 @@
 import re
 import json
+import textwrap
 from collections import Counter, defaultdict
 import numpy as np
 import pandas as pd
@@ -22,10 +23,10 @@ def suggest_max_len(p99_len, max_len_observed):
 
 def run_data_audit():
     if not DATASET_FILE.exists():
-        print(f"❌ Lỗi: Không tìm thấy file dữ liệu tại {DATASET_FILE}")
+        print(f"Lỗi: Không tìm thấy file dữ liệu tại {DATASET_FILE}")
         return
 
-    print("⏳ Đang đọc dữ liệu gốc và khởi tạo PhoBERT Tokenizer để đo đạc...")
+    print("Đang đọc dữ liệu gốc và khởi tạo PhoBERT Tokenizer để đo đạc...")
     with open(DATASET_FILE, "r", encoding="utf-8-sig") as f:
         content = f.read()
 
@@ -136,6 +137,7 @@ def run_data_audit():
     p99_bpe = int(np.percentile(bpe_lens, 99))
     p995_bpe = int(np.percentile(bpe_lens, 99.5))
     recommended_max_len = suggest_max_len(p995_bpe, longest_bpe[0])
+    recommended_cov = np.mean(bpe_lens <= recommended_max_len) * 100
 
     # Đếm tỷ lệ bao phủ ở các mốc MAX_LEN phổ biến
     coverage_stats = {}
@@ -155,12 +157,32 @@ def run_data_audit():
                 if cnt < 15:
                     rare_pairs.append((f"{asp}__{pol}", cnt))
 
+    # Thống kê số lượng lớp (Classes)
+    overall_classes = sorted(overall_sentiment_counter.keys())
+    polarity_classes = sorted(polarity_total_counter.keys())
+    entities = sorted({asp.split("#")[0] for asp in aspect_counter.keys() if "#" in asp})
+    attributes = sorted({asp.split("#")[1] for asp in aspect_counter.keys() if "#" in asp})
+    theoretical_absa_classes = len(aspect_counter) * len(polarity_classes)
+
+    entities_wrapped = textwrap.fill(
+        ", ".join(entities),
+        width=75,
+        initial_indent="     + ",
+        subsequent_indent="       ",
+    )
+    attributes_wrapped = textwrap.fill(
+        ", ".join(attributes),
+        width=75,
+        initial_indent="     + ",
+        subsequent_indent="       ",
+    )
+
     # ==================== XUẤT BÁO CÁO ====================
     lines = [
         "=" * 75,
         "BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)",
         "=" * 75,
-        f"1. KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY):",
+        "1. KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY):",
         f"   - Tổng số mẫu (comment) quét được       : {len(entries)} mẫu",
         f"   - Số mẫu CÓ NHÃN nhưng TRỐNG COMMENT    : {len(empty_text_ids)} mẫu "
         f"{f'(ID: {empty_text_ids})' if empty_text_ids else '(Không có)'}",
@@ -173,16 +195,28 @@ def run_data_audit():
         f"   - Số cụm bình luận trùng lặp nội dung   : {len(duplicate_groups)} cụm",
         "",
         "-" * 75,
-        "2. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN:",
-        f"   a) Theo số âm tiết (Từ đơn tách theo khoảng trắng):",
+        "2. THỐNG KÊ SỐ LƯỢNG LỚP CỦA DATASET (DATASET CLASSES):",
+        f"   - Lớp Cảm xúc tổng thể (Overall)        : {len(overall_classes)} lớp ({', '.join(overall_classes)})",
+        f"   - Lớp Sắc thái khía cạnh (Polarity)     : {len(polarity_classes)} lớp ({', '.join(polarity_classes)})",
+        f"   - Số lượng Thực thể (Entity)            : {len(entities)} thực thể",
+        entities_wrapped,
+        f"   - Số lượng Thuộc tính (Attribute)       : {len(attributes)} thuộc tính",
+        attributes_wrapped,
+        f"   - Tổng số lớp Khía cạnh (Aspect - ACD)  : {len(aspect_counter)} lớp",
+        f"   - Tổng số lớp Tổ hợp (End-to-End ABSA)  : {total_valid_pairs} lớp thực tế "
+        f"(Lý thuyết tối đa: {theoretical_absa_classes} lớp)",
+        "",
+        "-" * 75,
+        "3. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN:",
+        "   a) Theo số âm tiết (Từ đơn tách theo khoảng trắng):",
         f"      + Ngắn nhất : {shortest_raw[0]} từ (Câu #{shortest_raw[1]}: \"{shortest_raw[2]}\")",
-        f"      + Dài nhất  : {longest_raw[0]} từ (Câu #{longest_raw[1]}: \"{longest_raw[2][:70]}...\")",
+        f"      + Dài nhất  : {longest_raw[0]} từ (Câu #{longest_raw[1]}: \"{longest_raw[2][:60]}...\")",
         f"      + Trung bình: {raw_lens.mean():.1f} ± {raw_lens.std():.1f} từ | Trung vị (Median): {np.median(raw_lens):.0f} từ",
         "",
-        f"   b) Theo từ ghép tiếng Việt (Sau khi qua PyVi ViTokenizer):",
+        "   b) Theo từ ghép tiếng Việt (Sau khi qua PyVi ViTokenizer):",
         f"      + Ngắn nhất : {pyvi_lens.min()} từ ghép | Dài nhất: {pyvi_lens.max()} từ ghép | Trung bình: {pyvi_lens.mean():.1f} từ ghép",
         "",
-        f"   c) Theo Subword Token thực tế của PhoBERT (Đầu vào trực tiếp của mạng):",
+        "   c) Theo Subword Token thực tế của PhoBERT (Đầu vào trực tiếp của mạng):",
         f"      + Ngắn nhất : {bpe_lens.min()} tokens | Dài nhất: {longest_bpe[0]} tokens (Câu #{longest_bpe[1]})",
         f"      + Trung bình: {bpe_lens.mean():.1f} tokens | Trung vị: {np.median(bpe_lens):.0f} tokens",
         f"      + Phân vị 90% (90th percentile): {p90_bpe} tokens",
@@ -195,18 +229,21 @@ def run_data_audit():
 
     for m_len, (cov, trunc_cnt) in coverage_stats.items():
         lines.append(
-            f"      - MAX_LEN = {m_len:3d} -> Bao phủ toàn vẹn {cov:6.2f}% dữ liệu (Chỉ có {trunc_cnt:3d}/{len(entries)} câu bị cắt bớt)"
+            f"      - MAX_LEN = {m_len:3d} -> Bao phủ toàn vẹn {cov:6.2f}% dữ liệu "
+            f"(Chỉ có {trunc_cnt:3d}/{len(entries)} câu bị cắt bớt)"
         )
 
     lines.extend([
-        f"\n   => KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = {recommended_max_len} (Bao phủ >= 99.5% câu mà không lãng phí bộ nhớ đệm).",
+        "",
+        f"   => KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = {recommended_max_len} "
+        f"(Bao phủ {recommended_cov:.2f}% câu mà không lãng phí bộ nhớ đệm).",
         "",
         "-" * 75,
-        "3. THỐNG KÊ MẬT ĐỘ KHÍA CẠNH TRÊN MỖI BÌNH LUẬN:",
+        "4. THỐNG KÊ MẬT ĐỘ KHÍA CẠNH TRÊN MỖI BÌNH LUẬN:",
         f"   - Tổng số lượt nhãn (aspect-polarity)   : {int(asp_counts.sum())} lượt nhãn",
         f"   - Trung bình số khía cạnh / 1 bình luận : {asp_counts.mean():.2f} khía cạnh/câu",
         f"   - Ít nhất  : {asp_counts.min()} khía cạnh | Nhiều nhất: {most_aspects_entry[0]} khía cạnh (Câu #{most_aspects_entry[1]})",
-        f"   - Phân phối số lượng khía cạnh trong 1 câu:",
+        "   - Phân phối số lượng khía cạnh trong 1 câu:",
     ])
 
     asp_dist = Counter(asp_counts)
@@ -217,7 +254,7 @@ def run_data_audit():
     lines.extend([
         "",
         "-" * 75,
-        "4. THỐNG KÊ PHÂN PHỐI CẢM XÚC & BẤT CÂN BẰNG DỮ LIỆU (CLASS IMBALANCE):",
+        "5. THỐNG KÊ PHÂN PHỐI CẢM XÚC & BẤT CÂN BẰNG DỮ LIỆU (CLASS IMBALANCE):",
         "   a) Phân phối Cảm xúc tổng thể (Overall Sentiment của cả câu):",
         f"      + Positive (Tích cực)  : {overall_sentiment_counter['positive']:4d} câu ({overall_sentiment_counter['positive']/len(entries)*100:5.2f}%)",
         f"      + Negative (Tiêu cực)  : {overall_sentiment_counter['negative']:4d} câu ({overall_sentiment_counter['negative']/len(entries)*100:5.2f}%)",
@@ -228,7 +265,7 @@ def run_data_audit():
         f"      + Lượt chê  (Negative) : {polarity_total_counter['negative']:4d} lượt ({polarity_total_counter['negative']/asp_counts.sum()*100:5.2f}%)",
         f"      + Trung lập (Neutral)  : {polarity_total_counter['neutral']:4d} lượt ({polarity_total_counter['neutral']/asp_counts.sum()*100:5.2f}%)",
         "",
-        f"   c) Thống kê độ hiếm của tổ hợp nhãn:",
+        "   c) Thống kê độ hiếm của tổ hợp nhãn:",
         f"      + Tổng số khía cạnh gốc              : {len(aspect_counter)} khía cạnh",
         f"      + Tổng số tổ hợp (Aspect + Polarity) : {total_valid_pairs} tổ hợp có xuất hiện",
         f"      + Số tổ hợp SIÊU HIẾM (< 15 mẫu/3000 câu): {len(rare_pairs)}/{total_valid_pairs} tổ hợp ({len(rare_pairs)/total_valid_pairs*100:.1f}%)",
@@ -253,7 +290,7 @@ def run_data_audit():
     report_path = METRICS_DIR / "data_audit_report.txt"
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(report_str)
-    print(f"\n Đã xuất báo cáo kiểm định dữ liệu ra file: {report_path}")
+    print(f"\nĐã xuất báo cáo kiểm định dữ liệu ra file: {report_path}")
 
     # Vẽ biểu đồ phân phối độ dài Token và Số lượng khía cạnh để đưa vào Luận văn
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))

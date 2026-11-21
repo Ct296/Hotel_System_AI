@@ -10,10 +10,23 @@ BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)
    - Số cụm bình luận trùng lặp nội dung   : 26 cụm
 
 ---------------------------------------------------------------------------
-2. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN:
+2. THỐNG KÊ SỐ LƯỢNG LỚP CỦA DATASET (DATASET CLASSES):
+   - Lớp Cảm xúc tổng thể (Overall)        : 3 lớp (negative, neutral, positive)
+   - Lớp Sắc thái khía cạnh (Polarity)     : 3 lớp (negative, neutral, positive)
+   - Số lượng Thực thể (Entity)            : 7 thực thể
+     + FACILITIES, FOOD&DRINKS, HOTEL, LOCATION, ROOMS, ROOM_AMENITIES,
+       SERVICE
+   - Số lượng Thuộc tính (Attribute)       : 8 thuộc tính
+     + CLEANLINESS, COMFORT, DESIGN&FEATURES, GENERAL, MISCELLANEOUS,
+       PRICES, QUALITY, STYLE&OPTIONS
+   - Tổng số lớp Khía cạnh (Aspect - ACD)  : 33 lớp
+   - Tổng số lớp Tổ hợp (End-to-End ABSA)  : 92 lớp thực tế (Lý thuyết tối đa: 99 lớp)
+
+---------------------------------------------------------------------------
+3. THỐNG KÊ ĐỘ DÀI BÌNH LUẬN:
    a) Theo số âm tiết (Từ đơn tách theo khoảng trắng):
       + Ngắn nhất : 1 từ (Câu #416: "Tốt")
-      + Dài nhất  : 1027 từ (Câu #1485: "Gia đình mình đã có 4 ngày 3 đêm lưu trú tại Cửu Long Phú Quốc resort...")
+      + Dài nhất  : 1027 từ (Câu #1485: "Gia đình mình đã có 4 ngày 3 đêm lưu trú tại Cửu Long Phú Qu...")
       + Trung bình: 62.1 ± 58.5 từ | Trung vị (Median): 48 từ
 
    b) Theo từ ghép tiếng Việt (Sau khi qua PyVi ViTokenizer):
@@ -34,10 +47,10 @@ BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)
       - MAX_LEN = 192 -> Bao phủ toàn vẹn  97.27% dữ liệu (Chỉ có  82/3000 câu bị cắt bớt)
       - MAX_LEN = 256 -> Bao phủ toàn vẹn  99.07% dữ liệu (Chỉ có  28/3000 câu bị cắt bớt)
 
-   => KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = 256 (Bao phủ >= 99.5% câu mà không lãng phí bộ nhớ đệm).
+   => KẾT LUẬN ĐỀ XUẤT: Chọn MAX_LEN = 256 (Bao phủ 99.07% câu mà không lãng phí bộ nhớ đệm).
 
 ---------------------------------------------------------------------------
-3. THỐNG KÊ MẬT ĐỘ KHÍA CẠNH TRÊN MỖI BÌNH LUẬN:
+4. THỐNG KÊ MẬT ĐỘ KHÍA CẠNH TRÊN MỖI BÌNH LUẬN:
    - Tổng số lượt nhãn (aspect-polarity)   : 13949 lượt nhãn
    - Trung bình số khía cạnh / 1 bình luận : 4.65 khía cạnh/câu
    - Ít nhất  : 1 khía cạnh | Nhiều nhất: 14 khía cạnh (Câu #1860)
@@ -58,7 +71,7 @@ BÁO CÁO KIỂM ĐỊNH & THỐNG KÊ DỮ LIỆU (EXPLORATORY DATA ANALYSIS)
       + Câu có 14 khía cạnh:    4 câu ( 0.13%)
 
 ---------------------------------------------------------------------------
-4. THỐNG KÊ PHÂN PHỐI CẢM XÚC & BẤT CÂN BẰNG DỮ LIỆU (CLASS IMBALANCE):
+5. THỐNG KÊ PHÂN PHỐI CẢM XÚC & BẤT CÂN BẰNG DỮ LIỆU (CLASS IMBALANCE):
    a) Phân phối Cảm xúc tổng thể (Overall Sentiment của cả câu):
       + Positive (Tích cực)  : 2295 câu (76.50%)
       + Negative (Tiêu cực)  :  503 câu (16.77%)
